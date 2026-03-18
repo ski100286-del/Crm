@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="保險CRM">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#18160F">
+<title>保險CRM</title>
+
+<!-- PWA Icons (inline SVG as data URI for self-contained file) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%2318160F'/%3E%3Ctext x='90' y='115' font-size='90' text-anchor='middle'%3E🛡%3C/text%3E%3C/svg%3E">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+:root {
+  --bg: #F4F2ED;
+  --surface: #FDFCFA;
+  --surface2: #EDEAE2;
+  --border: #DDD9CF;
+  --text: #1C1A16;
+  --text2: #6A6560;
+  --text3: #A09B95;
+  --accent: #1B5E8A;
+  --accent-bg: #EAF2FA;
+  --green: #236840;
+  --green-bg: #E6F4ED;
+  --red: #A02828;
+  --red-bg: #FAE8E8;
+  --amber: #8A5B0F;
+  --amber-bg: #FDF3DE;
+  --orange: #B04A18;
+  --orange-bg: #FBF0EA;
+  --line-green: #06C755;
+  --nav-h: 60px;
+  --nav-h-safe: calc(60px + env(safe-area-inset-bottom));
+  --top-h: calc(52px + env(safe-area-inset-top));
+  --r: 12px;
+  --rl: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Noto Sans TC', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  overscroll-behavior: none;
+}
+
+/* ── App Shell ── */
+.app { display: flex; flex-direction: column; height: 100%; height: 100dvh; }
+
+/* Top bar */
+.topbar {
+  background: #18160F;
+  padding: env(safe-area-inset-top) 0 0;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+.topbar-inner {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+}
+.topbar-title { color: #FFF; font-size: 17px; font-weight: 600; flex: 1; letter-spacing: .2px; }
+.topbar-subtitle { color: rgba(255,255,255,0.45); font-size: 12px; margin-top: -1px; }
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #FFF;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.icon-btn:active { background: rgba(255,255,255,0.2); }
+
+/* Content area */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding-bottom: 8px;
+}
+
+/* Bottom nav */
+.bottom-nav {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+.nav-items { display: flex; height: var(--nav-h); }
+.nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--text3);
+  font-size: 10px;
+  font-weight: 400;
+  transition: color .15s;
+  padding: 6px 4px;
+  position: relative;
+  user-select: none;
+}
+.nav-tab.active { color: var(--accent); }
+.nav-tab .tab-icon { font-size: 22px; line-height: 1; }
+.nav-tab .tab-label { font-size: 10px; letter-spacing: .2px; }
+.nav-tab .tab-badge {
+  position: absolute;
+  top: 6px; right: calc(50% - 20px);
+  background: var(--red);
+  color: #FFF;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--surface);
+}
+
+/* ── Views ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── Page padding ── */
+.page { padding: 14px 14px 0; }
+
+/* ── Stats ── */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--rl);
+  padding: 13px 14px;
+  border-left: 3px solid var(--border);
+}
+.stat-card.s-red { border-color: var(--red); }
+.stat-card.s-orange { border-color: var(--orange); }
+.stat-card.s-green { border-color: var(--green); }
+.stat-card.s-blue { border-color: var(--accent); }
+.stat-lbl { font-size: 11px; color: var(--text2); }
+.stat-val { font-size: 26px; font-weight: 700; line-height: 1.1; margin-top: 3px; }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ── Section ── */
+.section-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+.section-title { font-size: 14px; font-weight: 600; }
+
+/* ── Card list ── */
+.card-list { display: flex; flex-direction: column; gap: 9px; }
+
+.policy-card {
+  background: var(--surface);
+  border-radius: var(--rl);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+}
+.policy-card.urg { border-left: 3px solid var(--red); }
+.policy-card.warn { border-left: 3px solid var(--orange); }
+
+.card-body { padding: 12px 14px; }
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.card-name { font-size: 15px; font-weight: 600; }
+.card-type { font-size: 11.5px; font-weight: 500; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.card-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--text2); margin-bottom: 9px; line-height: 1.7; }
+.card-meta strong { color: var(--text); }
+.card-footer { display: flex; align-items: center; justify-content: space-between; }
+.card-days { font-family: -apple-system-mono, monospace; }
+.card-actions { display: flex; gap: 6px; }
+
+/* ── Badges ── */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+.b-green { background: var(--green-bg); color: var(--green); }
+.b-red { background: var(--red-bg); color: var(--red); }
+.b-amber { background: var(--amber-bg); color: var(--amber); }
+.b-orange { background: var(--orange-bg); color: var(--orange); }
+.b-blue { background: var(--accent-bg); color: var(--accent); }
+.b-gray { background: var(--surface2); color: var(--text2); }
+.b-line { background: #E6FAF0; color: #059445; }
+
+/* Type colors */
+.tc-car { background: #EBF3FA; color: #1B5E8A; }
+.tc-fire { background: #FFF0E8; color: #9B3E15; }
+.tc-health { background: #E6F4ED; color: #236840; }
+.tc-travel { background: #F0EBFA; color: #5A3C8A; }
+.tc-life { background: #FDF3DE; color: #8A5B0F; }
+.tc-marine { background: #E8F0FE; color: #2E5AB5; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  -webkit-appearance: none;
+}
+.btn:active { opacity: .75; transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: #FFF; border-color: var(--accent); }
+.btn-green { background: var(--green); color: #FFF; border-color: var(--green); }
+.btn-red { background: var(--red); color: #FFF; border-color: var(--red); }
+.btn-line { background: var(--line-green); color: #FFF; border-color: var(--line-green); }
+.btn-sm { padding: 6px 12px; font-size: 12.5px; border-radius: 9px; }
+.btn-xs { padding: 4px 10px; font-size: 12px; border-radius: 8px; }
+
+/* ── Big FAB ── */
+.fab {
+  position: fixed;
+  bottom: calc(var(--nav-h-safe) + 14px);
+  right: 16px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #FFF;
+  font-size: 24px;
+  border: none;
+  box-shadow: 0 4px 16px rgba(27,94,138,0.4);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 90;
+}
+.fab:active { transform: scale(0.93); }
+
+/* ── Modal / Sheet ── */
+.sheet-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  align-items: flex-end;
+}
+.sheet-overlay.open { display: flex; }
+
+.sheet {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 92dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: sheetUp .22s ease;
+}
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 10px auto 6px; }
+.sheet-header { padding: 6px 18px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.sheet-header h3 { font-size: 16px; font-weight: 600; }
+.sheet-close { font-size: 22px; color: var(--text2); background: var(--surface2); border: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 300; }
+.sheet-body { padding: 16px 18px; }
+.sheet-footer { padding: 12px 18px 4px; display: flex; gap: 10px; }
+.sheet-footer .btn { flex: 1; justify-content: center; padding: 13px; font-size: 15px; border-radius: 12px; }
+
+/* ── Form ── */
+.form-group { margin-bottom: 14px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.flbl { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; display: block; }
+.fc {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 11px;
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.fc:focus { border-color: var(--accent); }
+textarea.fc { resize: none; min-height: 75px; }
+select.fc { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236A6560' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
+
+/* ── Action buttons (status) ── */
+.action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 4px 0 14px; }
+.act-btn {
+  padding: 11px 6px;
+  border-radius: 11px;
+  border: 2px solid;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s;
+  -webkit-appearance: none;
+}
+.act-btn.done { border-color: var(--green); color: var(--green); background: transparent; }
+.act-btn.done.on { background: var(--green); color: #FFF; }
+.act-btn.again { border-color: var(--amber); color: var(--amber); background: transparent; }
+.act-btn.again.on { background: var(--amber); color: #FFF; }
+.act-btn.fail { border-color: var(--red); color: var(--red); background: transparent; }
+.act-btn.fail.on { background: var(--red); color: #FFF; }
+.act-btn:active { opacity: .8; transform: scale(0.96); }
+
+/* ── Search bar ── */
+.search-bar {
+  background: var(--surface);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.search-input {
+  flex: 1;
+  background: var(--surface2);
+  border: none;
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+  -webkit-appearance: none;
+}
+.search-input::placeholder { color: var(--text3); }
+
+/* ── Timeline ── */
+.tl-item { display: flex; gap: 11px; padding-bottom: 16px; position: relative; }
+.tl-item::before { content: ''; position: absolute; left: 13px; top: 27px; bottom: 0; width: 1px; background: var(--border); }
+.tl-item:last-child::before { display: none; }
+.tl-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; border: 1.5px solid var(--border); background: var(--surface); }
+.tl-right { flex: 1; }
+.tl-time { font-size: 11px; color: var(--text3); }
+.tl-text { font-size: 13.5px; margin-top: 2px; }
+
+/* ── Toast ── */
+.toast-wrap { position: fixed; top: calc(env(safe-area-inset-top) + 60px); left: 14px; right: 14px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast {
+  background: #1C1A16;
+  color: #FFF;
+  padding: 13px 16px;
+  border-radius: 13px;
+  font-size: 14px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  pointer-events: all;
+  animation: toastIn .2s ease;
+}
+.toast.success { background: var(--green); }
+.toast.warning { background: var(--amber); }
+.toast.error { background: var(--red); }
+.toast.info { background: var(--accent); }
+@keyframes toastIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: scale(.95); } }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 48px 24px; color: var(--text3); }
+.empty-icon { font-size: 44px; margin-bottom: 12px; }
+.empty p { font-size: 14px; }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+/* ── Install banner ── */
+.install-banner {
+  background: linear-gradient(135deg, #18160F 0%, #2A3B5E 100%);
+  margin: 14px 14px 0;
+  border-radius: var(--rl);
+  padding: 14px 16px;
+  color: #FFF;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.install-banner .bi { font-size: 28px; flex-shrink: 0; }
+.install-banner h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.install-banner p { font-size: 12px; opacity: .75; line-height: 1.6; }
+.install-banner .close-btn { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 18px; cursor: pointer; flex-shrink: 0; padding: 2px; }
+
+/* ── Swipe hint ── */
+.group-label { font-size: 12px; font-weight: 600; color: var(--text2); margin: 14px 0 7px; letter-spacing: .3px; }
+
+/* ── Notif permission card ── */
+.perm-card {
+  background: linear-gradient(135deg, #1B3A5E 0%, #1B5E8A 100%);
+  border-radius: var(--rl);
+  padding: 14px 16px;
+  color: #FFF;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.perm-card .pi { font-size: 26px; flex-shrink: 0; }
+.perm-card h4 { font-size: 13px; font-weight: 600; }
+.perm-card p { font-size: 11.5px; opacity: .75; margin-top: 2px; }
+.perm-card .btn { flex-shrink: 0; background: rgba(255,255,255,0.15); color: #FFF; border-color: rgba(255,255,255,0.3); font-size: 12.5px; padding: 7px 13px; }
+
+/* Scrollbar hidden */
+::-webkit-scrollbar { display: none; }
+
+/* iOS input zoom fix */
+input[type="text"], input[type="number"], input[type="date"],
+input[type="email"], input[type="tel"], input[type="time"],
+select, textarea { font-size: 16px !important; }
+
+/* Safe area spacing fix for content */
+.safe-bottom { height: env(safe-area-inset-bottom); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div style="flex:1">
+        <div class="topbar-title" id="page-title-top">🛡 保險CRM</div>
+      </div>
+      <button class="icon-btn" onclick="openAddPolicy()" title="新增保單">＋</button>
+      <button class="icon-btn" onclick="go('settings')" title="設定">⚙</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="main-content">
+
+    <!-- Dashboard -->
+    <div id="view-dashboard" class="view active">
+      <div id="install-wrap"></div>
+      <div class="page">
+        <div id="notif-card-dash"></div>
+        <div class="stats-row" id="stats-row"></div>
+        <div class="section-hd">
+          <span class="section-title">⚠️ 即將到期</span>
+          <button class="btn btn-sm btn-green" onclick="pushNotif()">🔔 推播提醒</button>
+        </div>
+        <div class="card-list" id="dash-cards"></div>
+        <div style="height:14px"></div>
+      </div>
+    </div>
+
+    <!-- Reminders -->
+    <div id="view-reminders" class="view">
+      <div class="page">
+        <div id="rem-content"></div>
+        <div style="height:14px"></div>
+      </div>
+    </div>
+
+    <!-- Clients -->
+    <div id="view-clients" class="view">
+      <div class="search-bar">
+        <input class="search-input" type="text" placeholder="🔍 搜尋客戶..." id="cl-search" oninput="renderClients()" autocomplete="off">
+        <button class="btn btn-primary btn-sm" onclick="openAddClient()">＋</button>
+      </div>
+      <div class="page" style="padding-top:12px">
+        <div class="card-list" id="cl-list"></div>
+        <div style="height:14px"></div>
+      </div>
+    </div>
+
+    <!-- Policies -->
+    <div id="view-policies" class="view">
+      <div class="search-bar">
+        <input class="search-input" type="text" placeholder="🔍 搜尋保單..." id="po-search" oninput="renderPolicies()" autocomplete="off">
+        <select class="fc" id="po-type" onchange="renderPolicies()" style="width:auto;flex-shrink:0;padding:9px 30px 9px 11px;font-size:13px;border-radius:10px;background-color:var(--surface2);border-color:transparent">
+          <option value="">全部</option>
+          <option>汽機車險</option><option>火險</option><option>健康險</option><option>旅遊險</option><option>壽險</option><option>海上貨運險</option>
+        </select>
+      </div>
+      <div class="page" style="padding-top:12px">
+        <div class="card-list" id="po-list"></div>
+        <div style="height:14px"></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="view-settings" class="view">
+      <div class="page" style="padding-top:14px">
+
+        <!-- Notification -->
+        <div style="background:var(--surface);border-radius:var(--rl);overflow:hidden;margin-bottom:14px;border:1px solid var(--border)">
+          <div style="padding:14px 16px 12px;border-bottom:1px solid var(--border)">
+            <div style="font-size:14px;font-weight:600;margin-bottom:8px">🔔 推播通知</div>
+            <div id="notif-status-set"></div>
+          </div>
+          <div style="padding:12px 16px">
+            <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="requestPerm()">開啟通知權限</button>
+            <button class="btn" style="width:100%;justify-content:center;padding:12px;margin-top:8px" onclick="testNotif()">📨 發送測試通知</button>
+          </div>
+          <div style="padding:0 16px 14px;display:flex;align-items:center;gap:10px">
+            <label style="font-size:13px;color:var(--text2);flex:1">每日檢查時間</label>
+            <input type="time" id="chk-time" value="09:00" class="fc" style="width:130px;padding:8px 11px">
+            <button class="btn btn-sm" onclick="saveSettings()">儲存</button>
+          </div>
+        </div>
+
+        <!-- LINE -->
+        <div style="background:var(--surface);border-radius:var(--rl);overflow:hidden;margin-bottom:14px;border:1px solid var(--border)">
+          <div style="padding:14px 16px 12px">
+            <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              📱 LINE Notify
+              <span class="badge b-amber">即將推出</span>
+            </div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.8;background:var(--accent-bg);border-radius:10px;padding:12px">
+              🔜 串接後可自動發送通知到您的 LINE。<br>
+              目前可用「📱 草稿」按鈕複製訊息手動發送。
+            </div>
+          </div>
+        </div>
+
+        <!-- Data -->
+        <div style="background:var(--surface);border-radius:var(--rl);overflow:hidden;margin-bottom:14px;border:1px solid var(--border)">
+          <div style="padding:14px 16px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">💾 資料管理</div>
+            <div id="storage-info" style="font-size:12px;color:var(--text3);margin-bottom:12px"></div>
+            <button class="btn" style="width:100%;justify-content:center;padding:12px;margin-bottom:8px" onclick="exportJSON()">⬇ 匯出備份 (JSON)</button>
+            <button class="btn" style="width:100%;justify-content:center;padding:12px;margin-bottom:8px" onclick="document.getElementById('imp').click()">⬆ 從備份還原</button>
+            <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(event)">
+            <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px" onclick="clearAll()">🗑 清除所有資料</button>
+          </div>
+        </div>
+
+        <!-- Install guide -->
+        <div style="background:var(--surface);border-radius:var(--rl);overflow:hidden;margin-bottom:14px;border:1px solid var(--border);padding:14px 16px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px">📱 加入主畫面（免安裝）</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.9">
+            <strong>iPhone Safari：</strong><br>
+            1. 點下方分享鍵 <span style="font-size:15px">⎙</span><br>
+            2. 選「加入主畫面」<br>
+            3. 點「加入」完成！<br><br>
+            <strong>Android Chrome：</strong><br>
+            點右上角選單 → 「安裝應用程式」
+          </div>
+        </div>
+
+        <div style="height:14px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-items">
+      <div class="nav-tab active" onclick="go('dashboard')" id="tab-dashboard">
+        <div class="tab-icon">📊</div>
+        <div class="tab-label">總覽</div>
+        <div class="tab-badge" id="dash-badge" style="display:none">0</div>
+      </div>
+      <div class="nav-tab" onclick="go('reminders')" id="tab-reminders">
+        <div class="tab-icon">🔔</div>
+        <div class="tab-label">提醒</div>
+        <div class="tab-badge" id="rem-badge" style="display:none">0</div>
+      </div>
+      <div class="nav-tab" onclick="go('clients')" id="tab-clients">
+        <div class="tab-icon">👥</div>
+        <div class="tab-label">客戶</div>
+      </div>
+      <div class="nav-tab" onclick="go('policies')" id="tab-policies">
+        <div class="tab-icon">📋</div>
+        <div class="tab-label">保單</div>
+      </div>
+      <div class="nav-tab" onclick="go('settings')" id="tab-settings">
+        <div class="tab-icon">⚙️</div>
+        <div class="tab-label">設定</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Sheets ── -->
+
+<!-- Policy Sheet -->
+<div class="sheet-overlay" id="pol-sheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="pol-sheet-title">新增保單</h3>
+      <button class="sheet-close" onclick="cs('pol-sheet')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="form-group">
+        <label class="flbl">客戶 *</label>
+        <select class="fc" id="p-client"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="flbl">保單號碼 *</label>
+          <input class="fc" id="p-num" placeholder="AB12345678" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="flbl">險種 *</label>
+          <select class="fc" id="p-type">
+            <option>汽機車險</option><option>火險</option><option>健康險</option><option>旅遊險</option><option>壽險</option><option>海上貨運險</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="flbl">起始日 *</label>
+          <input class="fc" type="date" id="p-start">
+        </div>
+        <div class="form-group">
+          <label class="flbl">到期日 *</label>
+          <input class="fc" type="date" id="p-end">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="flbl">保費（元）</label>
+          <input class="fc" type="number" id="p-prem" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="flbl">保險公司</label>
+          <input class="fc" id="p-co" placeholder="富邦產險">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="flbl">承保項目（車牌/地址）</label>
+        <input class="fc" id="p-item" placeholder="承保標的說明">
+      </div>
+      <div class="form-group">
+        <label class="flbl">備註</label>
+        <textarea class="fc" id="p-note" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn" onclick="cs('pol-sheet')">取消</button>
+      <button class="btn btn-primary" onclick="savePolicy()">儲存保單</button>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+</div>
+
+<!-- Client Sheet -->
+<div class="sheet-overlay" id="cli-sheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="cli-sheet-title">新增客戶</h3>
+      <button class="sheet-close" onclick="cs('cli-sheet')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="flbl">姓名 *</label>
+          <input class="fc" id="c-name" placeholder="客戶姓名" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="flbl">電話</label>
+          <input class="fc" type="tel" id="c-phone" placeholder="0912-345-678">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="flbl">LINE ID</label>
+          <input class="fc" id="c-line" placeholder="LINE 帳號" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="flbl">Email</label>
+          <input class="fc" type="email" id="c-email" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="flbl">生日</label>
+          <input class="fc" type="date" id="c-bday">
+        </div>
+        <div class="form-group">
+          <label class="flbl">職業</label>
+          <input class="fc" id="c-job" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="flbl">地址</label>
+        <input class="fc" id="c-addr" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="flbl">備註</label>
+        <textarea class="fc" id="c-note" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn" onclick="cs('cli-sheet')">取消</button>
+      <button class="btn btn-primary" onclick="saveClient()">儲存客戶</button>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+</div>
+
+<!-- Action Sheet -->
+<div class="sheet-overlay" id="act-sheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3>聯繫狀態記錄</h3>
+      <button class="sheet-close" onclick="cs('act-sheet')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div id="act-info" style="background:var(--bg);border-radius:11px;padding:12px;font-size:13.5px;margin-bottom:14px;line-height:1.8"></div>
+      <label class="flbl">聯繫結果</label>
+      <div class="action-row">
+        <button class="act-btn done" id="ab-done" onclick="pickAct('done')">✅<br>已完成</button>
+        <button class="act-btn again" id="ab-again" onclick="pickAct('again')">🔄<br>再聯繫</button>
+        <button class="act-btn fail" id="ab-fail" onclick="pickAct('fail')">❌<br>未完成</button>
+      </div>
+      <div class="form-group">
+        <label class="flbl">備註說明</label>
+        <textarea class="fc" id="act-note" rows="3" placeholder="記錄聯繫內容..."></textarea>
+      </div>
+      <div class="form-group" id="retry-row" style="display:none">
+        <label class="flbl">再聯繫日期</label>
+        <input class="fc" type="date" id="retry-date">
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn" onclick="cs('act-sheet')">取消</button>
+      <button class="btn btn-primary" onclick="saveAction()">儲存記錄</button>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+</div>
+
+<!-- LINE Draft Sheet -->
+<div class="sheet-overlay" id="line-sheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3>📱 LINE 訊息草稿</h3>
+      <button class="sheet-close" onclick="cs('line-sheet')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div style="font-size:12.5px;color:var(--text2);margin-bottom:10px">複製後開啟 LINE 貼上即可</div>
+      <textarea class="fc" id="line-txt" rows="12" readonly style="font-size:13px;background:#F8F8F8;font-family:monospace"></textarea>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn" onclick="cs('line-sheet')">關閉</button>
+      <button class="btn btn-line" onclick="copyLine()">📋 複製</button>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+let db = { clients:[], policies:[], history:[], settings:{checkTime:'09:00'} };
+let ePol=null, eCli=null, curPol=null, curAct=null;
+const RDAYS=[30,20,10,2];
+
+function load(){
+  try{ const s=localStorage.getItem('ins-crm'); if(s) db=JSON.parse(s); }catch(e){}
+  if(!db.clients) db.clients=[];
+  if(!db.policies) db.policies=[];
+  if(!db.history) db.history=[];
+  if(!db.settings) db.settings={checkTime:'09:00'};
+  document.getElementById('chk-time').value=db.settings.checkTime||'09:00';
+  if(db.clients.length===0) seed();
+  checkInstall();
+}
+
+function save(){ localStorage.setItem('ins-crm',JSON.stringify(db)); updateStorageInfo(); }
+
+function seed(){
+  db.clients=[
+    {id:'c1',name:'王小明',phone:'0912-345-678',line:'ming_wang',email:'ming@example.com',birthday:'1980-05-15',job:'工程師',addr:'台北市信義區',note:'注重服務品質'},
+    {id:'c2',name:'李美華',phone:'0923-456-789',line:'lisa_lee',email:'',birthday:'1975-11-22',job:'教師',addr:'新北市板橋區',note:'每年固定續保'},
+    {id:'c3',name:'陳建國',phone:'0934-567-890',line:'',email:'',birthday:'1990-03-08',job:'商人',addr:'台中市西區',note:'偏好電話聯繫'},
+    {id:'c4',name:'張淑芬',phone:'0956-789-012',line:'sophia_chang',email:'sophia@gmail.com',birthday:'1985-07-30',job:'護理師',addr:'高雄市前鎮區',note:''},
+  ];
+  const ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().split('T')[0]};
+  db.policies=[
+    {id:'p1',cid:'c1',num:'AB12345678',type:'汽機車險',prem:18500,start:ad(-335),end:ad(30),co:'富邦產險',item:'ABC-1234 Toyota Camry',note:'含甲式車體險',rs:{}},
+    {id:'p2',cid:'c2',num:'CD98765432',type:'火險',prem:8800,start:ad(-345),end:ad(20),co:'國泰產險',item:'府中路住宅',note:'',rs:{}},
+    {id:'p3',cid:'c3',num:'EF11223344',type:'健康險',prem:32000,start:ad(-355),end:ad(10),co:'新光產險',item:'住院醫療綜合險',note:'含實支實付',rs:{}},
+    {id:'p4',cid:'c4',num:'GH55667788',type:'汽機車險',prem:15200,start:ad(-363),end:ad(2),co:'泰安產險',item:'XYZ-5678 Honda CR-V',note:'',rs:{}},
+    {id:'p5',cid:'c1',num:'IJ99001122',type:'旅遊險',prem:1200,start:ad(-180),end:ad(185),co:'富邦產險',item:'海外旅遊綜合險',note:'',rs:{}},
+    {id:'p6',cid:'c2',num:'KL33445566',type:'壽險',prem:48000,start:ad(-400),end:ad(-35),co:'南山人壽',item:'終身壽險',note:'',rs:{}},
+  ];
+  save();
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5) }
+function daysLeft(d){ const a=new Date();a.setHours(0,0,0,0);const b=new Date(d);b.setHours(0,0,0,0);return Math.ceil((b-a)/86400000) }
+function cn(cid){ const c=db.clients.find(x=>x.id===cid);return c?c.name:'—' }
+function cc(cid){ return db.clients.find(x=>x.id===cid) }
+function fd(d){ return d?d.replace(/-/g,'/'):'-' }
+function fa(n){ return n?Number(n).toLocaleString()+' 元':'-' }
+function expiring(){ return db.policies.map(p=>({...p,dl:daysLeft(p.end)})).filter(p=>p.dl<=30&&p.dl>=-30).sort((a,b)=>a.dl-b.dl) }
+function tc(t){ return {'汽機車險':'tc-car','火險':'tc-fire','健康險':'tc-health','旅遊險':'tc-travel','壽險':'tc-life','海上貨運險':'tc-marine'}[t]||'' }
+
+function dayBadge(dl){
+  if(dl<0) return `<span class="badge b-gray">過期${Math.abs(dl)}天</span>`;
+  if(dl<=2) return `<span class="badge b-red">⚠ 剩${dl}天</span>`;
+  if(dl<=10) return `<span class="badge b-orange">剩${dl}天</span>`;
+  if(dl<=20) return `<span class="badge b-amber">剩${dl}天</span>`;
+  return `<span class="badge b-blue">剩${dl}天</span>`;
+}
+
+function stBadge(rs){
+  if(!rs?.act) return '';
+  return {done:'<span class="badge b-green">✅ 已完成</span>',again:'<span class="badge b-amber">🔄 再聯繫</span>',fail:'<span class="badge b-red">❌ 未完成</span>'}[rs.act]||'';
+}
+
+function addHist(pid,act,note){
+  const p=db.policies.find(x=>x.id===pid);
+  db.history.unshift({id:uid(),pid,cn:cn(p?.cid),pt:p?.type,pn:p?.num,act,note,ts:new Date().toISOString()});
+  if(db.history.length>300) db.history=db.history.slice(0,300);
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function go(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.getElementById('tab-'+name)?.classList.add('active');
+  document.getElementById('main-content').scrollTop=0;
+  render(name);
+}
+
+function render(n){
+  if(n==='dashboard') renderDash();
+  if(n==='reminders') renderRem();
+  if(n==='clients') renderClients();
+  if(n==='policies') renderPolicies();
+  if(n==='settings'){ updateNotifUI(); updateStorageInfo(); }
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderDash(){
+  const exp=expiring();
+  const urgent=exp.filter(p=>p.dl>=0&&p.dl<=2).length;
+  const soon=exp.filter(p=>p.dl>=0&&p.dl<=30).length;
+  const active=db.policies.filter(p=>daysLeft(p.end)>=0).length;
+  const prem=db.policies.filter(p=>daysLeft(p.end)>=0).reduce((s,p)=>s+(Number(p.prem)||0),0);
+
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card s-red"><div class="stat-lbl">🚨 緊急（2天內）</div><div class="stat-val" style="color:var(--red)">${urgent}</div><div class="stat-sub">需立即聯繫</div></div>
+    <div class="stat-card s-orange"><div class="stat-lbl">📅 近期（30天）</div><div class="stat-val" style="color:var(--orange)">${soon}</div><div class="stat-sub">待追蹤</div></div>
+    <div class="stat-card s-green"><div class="stat-lbl">📋 有效保單</div><div class="stat-val" style="color:var(--green)">${active}</div><div class="stat-sub">共${db.policies.length}張</div></div>
+    <div class="stat-card s-blue"><div class="stat-lbl">💰 有效保費</div><div class="stat-val" style="color:var(--accent);font-size:18px">${prem.toLocaleString()}</div><div class="stat-sub">元</div></div>
+  `;
+
+  updateBadges();
+
+  // Notification prompt
+  const ndash=document.getElementById('notif-card-dash');
+  if(Notification.permission==='default'){
+    ndash.innerHTML=`<div class="perm-card">
+      <div class="pi">🔔</div>
+      <div style="flex:1"><h4>開啟到期推播通知</h4><p>保單到期前30/20/10/2天自動提醒</p></div>
+      <button class="btn btn-sm" onclick="requestPerm()">開啟</button>
+    </div>`;
+  } else { ndash.innerHTML=''; }
+
+  const top=exp.filter(p=>p.dl>=0).slice(0,8);
+  if(!top.length){
+    document.getElementById('dash-cards').innerHTML='<div class="empty"><div class="empty-icon">🎉</div><p>近期無到期保單</p></div>';
+    return;
+  }
+  document.getElementById('dash-cards').innerHTML=top.map(p=>policyCard(p,true)).join('');
+}
+
+// ═══════════════════════════════════════════
+// REMINDERS
+// ═══════════════════════════════════════════
+function renderRem(){
+  const exp=expiring();
+  if(!exp.length){ document.getElementById('rem-content').innerHTML='<div class="empty"><div class="empty-icon">✅</div><p>目前沒有到期提醒</p></div>';return; }
+  const groups=[
+    {label:'🚨 到期前2天（緊急）',items:exp.filter(p=>p.dl>=0&&p.dl<=2)},
+    {label:'🔴 到期前10天',items:exp.filter(p=>p.dl>2&&p.dl<=10)},
+    {label:'🟠 到期前20天',items:exp.filter(p=>p.dl>10&&p.dl<=20)},
+    {label:'🟡 到期前30天',items:exp.filter(p=>p.dl>20&&p.dl<=30)},
+    {label:'⚫ 已過期',items:exp.filter(p=>p.dl<0)},
+  ];
+  let html='';
+  for(const g of groups){
+    if(!g.items.length) continue;
+    html+=`<div class="group-label">${g.label} (${g.items.length})</div>`;
+    html+=g.items.map(p=>policyCard(p,true)).join('');
+  }
+  document.getElementById('rem-content').innerHTML=html;
+}
+
+function policyCard(p, showActions=false){
+  const cl=cc(p.cid);
+  const border=p.dl>=0&&p.dl<=2?'urg':p.dl>=0&&p.dl<=10?'warn':'';
+  const rs=p.rs||{};
+  return `<div class="policy-card ${border}">
+    <div class="card-body">
+      <div class="card-top">
+        <div>
+          <div class="card-name">${cn(p.cid)}</div>
+          ${cl?.phone?`<div style="font-size:12px;color:var(--text3)">${cl.phone}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="badge card-type ${tc(p.type)}">${p.type}</span>
+          ${dayBadge(p.dl)}
+        </div>
+      </div>
+      <div class="card-meta">
+        <span>📋 <strong>${p.num}</strong></span>
+        <span>🏢 ${p.co||'—'}</span>
+        <span>📅 ${fd(p.end)}</span>
+        <span>💰 ${fa(p.prem)}</span>
+        ${cl?.line?`<span>🟢 ${cl.line}</span>`:''}
+      </div>
+      ${rs.note?`<div style="font-size:12px;color:var(--accent);margin-bottom:8px">💬 ${rs.note}</div>`:''}
+      ${rs.retryDate?`<div style="font-size:12px;color:var(--amber);margin-bottom:8px">🗓 再聯繫：${fd(rs.retryDate)}</div>`:''}
+      ${stBadge(rs)}
+      ${showActions?`
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-xs ${rs.act==='done'?'btn-green':''}" onclick="quickAct('${p.id}','done')">✅ 完成</button>
+        <button class="btn btn-xs ${rs.act==='again'?'btn-primary':''}" onclick="quickAct('${p.id}','again')">🔄 再聯繫</button>
+        <button class="btn btn-xs ${rs.act==='fail'?'btn-red':''}" onclick="quickAct('${p.id}','fail')">❌ 未完成</button>
+        <button class="btn btn-xs" onclick="openActSheet('${p.id}')">📝 記錄</button>
+        <button class="btn btn-xs" onclick="lineDraft('${p.id}')">📱 LINE</button>
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+function quickAct(pid,act){
+  const p=db.policies.find(x=>x.id===pid); if(!p)return;
+  if(!p.rs) p.rs={};
+  p.rs.act=act; p.rs.updAt=new Date().toISOString();
+  addHist(pid,act,''); save();
+  const lbl={done:'✅ 已完成',again:'🔄 再聯繫',fail:'❌ 未完成'};
+  toast(lbl[act],act==='done'?'success':act==='again'?'warning':'error');
+  const cur=document.querySelector('.view.active')?.id?.replace('view-','');
+  render(cur||'dashboard');
+}
+
+// ═══════════════════════════════════════════
+// CLIENTS
+// ═══════════════════════════════════════════
+function renderClients(){
+  const q=(document.getElementById('cl-search')?.value||'').toLowerCase();
+  const list=db.clients.filter(c=>!q||c.name.toLowerCase().includes(q)||(c.phone||'').includes(q));
+  const el=document.getElementById('cl-list');
+  if(!list.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><p>尚無客戶</p></div>';return; }
+  el.innerHTML=list.map(c=>{
+    const pc=db.policies.filter(p=>p.cid===c.id).length;
+    return `<div class="policy-card">
+      <div class="card-body">
+        <div class="card-top">
+          <div>
+            <div class="card-name">${c.name}</div>
+            ${c.job?`<div style="font-size:12px;color:var(--text3)">${c.job}</div>`:''}
+          </div>
+          <span class="badge b-blue">${pc} 張保單</span>
+        </div>
+        <div class="card-meta">
+          ${c.phone?`<span>📞 ${c.phone}</span>`:''}
+          ${c.line?`<span>🟢 ${c.line}</span>`:''}
+          ${c.birthday?`<span>🎂 ${fd(c.birthday)}</span>`:''}
+        </div>
+        ${c.note?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${c.note}</div>`:''}
+        <div style="margin-top:10px;display:flex;gap:6px">
+          <button class="btn btn-xs" onclick="openEditClient('${c.id}')">✏ 編輯</button>
+          <button class="btn btn-xs btn-red" onclick="delClient('${c.id}')">刪除</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddClient(){
+  eCli=null;
+  document.getElementById('cli-sheet-title').textContent='新增客戶';
+  ['c-name','c-phone','c-line','c-email','c-bday','c-job','c-addr','c-note'].forEach(id=>document.getElementById(id).value='');
+  os('cli-sheet');
+}
+function openEditClient(id){
+  eCli=id; const c=db.clients.find(x=>x.id===id); if(!c)return;
+  document.getElementById('cli-sheet-title').textContent='編輯客戶';
+  document.getElementById('c-name').value=c.name||'';
+  document.getElementById('c-phone').value=c.phone||'';
+  document.getElementById('c-line').value=c.line||'';
+  document.getElementById('c-email').value=c.email||'';
+  document.getElementById('c-bday').value=c.birthday||'';
+  document.getElementById('c-job').value=c.job||'';
+  document.getElementById('c-addr').value=c.addr||'';
+  document.getElementById('c-note').value=c.note||'';
+  os('cli-sheet');
+}
+function saveClient(){
+  const name=document.getElementById('c-name').value.trim();
+  if(!name){ toast('請輸入客戶姓名','error');return; }
+  const data={name,phone:document.getElementById('c-phone').value.trim(),line:document.getElementById('c-line').value.trim(),email:document.getElementById('c-email').value.trim(),birthday:document.getElementById('c-bday').value,job:document.getElementById('c-job').value.trim(),addr:document.getElementById('c-addr').value.trim(),note:document.getElementById('c-note').value.trim()};
+  if(eCli){ const i=db.clients.findIndex(c=>c.id===eCli); if(i>=0) db.clients[i]={...db.clients[i],...data}; }
+  else db.clients.push({id:uid(),...data});
+  save();cs('cli-sheet');renderClients();toast('客戶已儲存 ✓','success');
+}
+function delClient(id){
+  if(!confirm('確定刪除此客戶？')) return;
+  db.clients=db.clients.filter(c=>c.id!==id);
+  db.policies=db.policies.filter(p=>p.cid!==id);
+  save();renderClients();toast('已刪除','error');
+}
+
+// ═══════════════════════════════════════════
+// POLICIES
+// ═══════════════════════════════════════════
+function renderPolicies(){
+  const q=(document.getElementById('po-search')?.value||'').toLowerCase();
+  const tf=document.getElementById('po-type')?.value||'';
+  let list=db.policies.map(p=>({...p,dl:daysLeft(p.end)}));
+  if(q) list=list.filter(p=>cn(p.cid).toLowerCase().includes(q)||(p.num||'').toLowerCase().includes(q));
+  if(tf) list=list.filter(p=>p.type===tf);
+  list.sort((a,b)=>a.dl-b.dl);
+  const el=document.getElementById('po-list');
+  if(!list.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>無符合保單</p></div>';return; }
+  el.innerHTML=list.map(p=>{
+    const rs=p.rs||{};
+    const border=p.dl>=0&&p.dl<=2?'urg':p.dl>=0&&p.dl<=10?'warn':'';
+    return `<div class="policy-card ${border}">
+      <div class="card-body">
+        <div class="card-top">
+          <div><div class="card-name">${cn(p.cid)}</div><div style="font-size:12px;color:var(--text3);font-family:monospace">${p.num}</div></div>
+          <div style="text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+            <span class="badge ${tc(p.type)}">${p.type}</span>
+            ${dayBadge(p.dl)}
+          </div>
+        </div>
+        <div class="card-meta">
+          <span>📅 ${fd(p.end)}</span>
+          <span>💰 ${fa(p.prem)}</span>
+          <span>🏢 ${p.co||'—'}</span>
+        </div>
+        ${stBadge(rs)}
+        <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn btn-xs" onclick="openActSheet('${p.id}')">📝 記錄</button>
+          <button class="btn btn-xs" onclick="lineDraft('${p.id}')">📱 LINE</button>
+          <button class="btn btn-xs" onclick="openEditPolicy('${p.id}')">✏ 編輯</button>
+          <button class="btn btn-xs btn-red" onclick="delPolicy('${p.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddPolicy(){
+  ePol=null;
+  document.getElementById('pol-sheet-title').textContent='新增保單';
+  ['p-num','p-prem','p-start','p-end','p-co','p-item','p-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('p-type').value='汽機車險';
+  const sel=document.getElementById('p-client');
+  sel.innerHTML='<option value="">選擇客戶...</option>'+db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  sel.value='';
+  os('pol-sheet');
+}
+function openEditPolicy(id){
+  ePol=id; const p=db.policies.find(x=>x.id===id); if(!p)return;
+  document.getElementById('pol-sheet-title').textContent='編輯保單';
+  const sel=document.getElementById('p-client');
+  sel.innerHTML='<option value="">選擇客戶...</option>'+db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  sel.value=p.cid||'';
+  document.getElementById('p-num').value=p.num||'';
+  document.getElementById('p-type').value=p.type||'汽機車險';
+  document.getElementById('p-prem').value=p.prem||'';
+  document.getElementById('p-start').value=p.start||'';
+  document.getElementById('p-end').value=p.end||'';
+  document.getElementById('p-co').value=p.co||'';
+  document.getElementById('p-item').value=p.item||'';
+  document.getElementById('p-note').value=p.note||'';
+  os('pol-sheet');
+}
+function savePolicy(){
+  const cid=document.getElementById('p-client').value;
+  const num=document.getElementById('p-num').value.trim();
+  const end=document.getElementById('p-end').value;
+  if(!cid){ toast('請選擇客戶','error');return; }
+  if(!num){ toast('請輸入保單號碼','error');return; }
+  if(!end){ toast('請輸入到期日','error');return; }
+  const data={cid,num,type:document.getElementById('p-type').value,prem:document.getElementById('p-prem').value,start:document.getElementById('p-start').value,end,co:document.getElementById('p-co').value.trim(),item:document.getElementById('p-item').value.trim(),note:document.getElementById('p-note').value.trim()};
+  if(ePol){ const i=db.policies.findIndex(p=>p.id===ePol); if(i>=0) db.policies[i]={...db.policies[i],...data}; }
+  else db.policies.push({id:uid(),...data,rs:{}});
+  save();cs('pol-sheet');renderPolicies();renderDash();toast('保單已儲存 ✓','success');
+}
+function delPolicy(id){
+  if(!confirm('確定刪除？'))return;
+  db.policies=db.policies.filter(p=>p.id!==id);
+  save();renderPolicies();renderDash();toast('已刪除','error');
+}
+
+// ═══════════════════════════════════════════
+// ACTION SHEET
+// ═══════════════════════════════════════════
+function openActSheet(pid){
+  curPol=pid; curAct=null;
+  const p=db.policies.find(x=>x.id===pid);
+  const rs=p?.rs||{};
+  document.getElementById('act-info').innerHTML=`<strong>${cn(p?.cid)}</strong> — ${p?.type}<br><span style="color:var(--text2)">保單 ${p?.num}｜到期 ${fd(p?.end)}｜剩 ${daysLeft(p?.end)} 天</span>`;
+  document.getElementById('act-note').value=rs.note||'';
+  document.getElementById('retry-date').value=rs.retryDate||'';
+  document.getElementById('retry-row').style.display='none';
+  ['ab-done','ab-again','ab-fail'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  if(rs.act){ curAct=rs.act; document.getElementById({done:'ab-done',again:'ab-again',fail:'ab-fail'}[rs.act])?.classList.add('on'); if(rs.act==='again') document.getElementById('retry-row').style.display=''; }
+  os('act-sheet');
+}
+function pickAct(a){
+  curAct=a;
+  ['ab-done','ab-again','ab-fail'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById({done:'ab-done',again:'ab-again',fail:'ab-fail'}[a])?.classList.add('on');
+  document.getElementById('retry-row').style.display=a==='again'?'':'none';
+}
+function saveAction(){
+  if(!curAct){ toast('請選擇聯繫結果','error');return; }
+  const p=db.policies.find(x=>x.id===curPol); if(!p)return;
+  if(!p.rs) p.rs={};
+  p.rs.act=curAct;
+  p.rs.note=document.getElementById('act-note').value.trim();
+  p.rs.updAt=new Date().toISOString();
+  if(curAct==='again') p.rs.retryDate=document.getElementById('retry-date').value;
+  addHist(curPol,curAct,p.rs.note);
+  save();cs('act-sheet');
+  toast({done:'✅ 已完成',again:'🔄 設定再聯繫',fail:'❌ 未完成'}[curAct],curAct==='done'?'success':'warning');
+  const cur=document.querySelector('.view.active')?.id?.replace('view-','');
+  render(cur||'dashboard');
+}
+
+// ═══════════════════════════════════════════
+// LINE DRAFT
+// ═══════════════════════════════════════════
+function lineDraft(pid){
+  const p=db.policies.find(x=>x.id===pid); if(!p)return;
+  const cl=cc(p.cid); const dl=daysLeft(p.end);
+  const urg=dl<=2?'【🚨緊急】':dl<=10?'【⚠️重要】':'【📅提醒】';
+  document.getElementById('line-txt').value=
+`${urg} 保單到期提醒
+━━━━━━━━━━━━━━━━
+👤 客戶：${cn(p.cid)}
+📞 電話：${cl?.phone||'—'}
+🟢 LINE：${cl?.line||'未設定'}
+━━━━━━━━━━━━━━━━
+📋 險種：${p.type}
+🔢 保單號：${p.num}
+🏢 保險公司：${p.co||'—'}
+📅 到期日：${fd(p.end)}
+⏳ 剩餘：${dl} 天
+💰 保費：${fa(p.prem)}
+━━━━━━━━━━━━━━━━
+請確認續保事宜！`;
+  os('line-sheet');
+}
+function copyLine(){
+  const txt=document.getElementById('line-txt').value;
+  navigator.clipboard?.writeText(txt).then(()=>toast('✅ 已複製，開啟 LINE 貼上即可','success')).catch(()=>{
+    document.getElementById('line-txt').select(); document.execCommand('copy'); toast('✅ 已複製','success');
+  });
+}
+
+// ═══════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════
+async function requestPerm(){
+  if(!('Notification' in window)){ toast('此瀏覽器不支援通知','error');return; }
+  const r=await Notification.requestPermission();
+  updateNotifUI(); renderDash();
+  if(r==='granted'){
+    toast('🔔 通知已開啟！','success');
+    new Notification('🛡 保險CRM',{body:'系統將在保單到期前自動提醒您',tag:'welcome'});
+  } else { toast('請至設定 → Safari → 通知，手動允許','warning'); }
+}
+
+function pushNotif(){
+  if(Notification.permission!=='granted'){ requestPerm();return; }
+  const exp=expiring().filter(p=>p.dl>=0&&p.dl<=30);
+  if(!exp.length){ toast('目前無近期到期保單','warning');return; }
+  exp.forEach((p,i)=>setTimeout(()=>{
+    new Notification(`${p.dl<=2?'🚨':p.dl<=10?'⚠️':'📅'} ${cn(p.cid)} — ${p.type}`,{body:`保單${p.num} 到期${fd(p.end)}（剩${p.dl}天）\n保費 ${fa(p.prem)}`,tag:`p-${p.id}`,requireInteraction:p.dl<=2});
+  },i*500));
+  toast(`🔔 已推送 ${exp.length} 筆通知`,'success');
+}
+
+function testNotif(){
+  if(Notification.permission!=='granted'){ requestPerm();return; }
+  new Notification('🛡 保險CRM 測試',{body:'推播通知正常運作！',tag:'test'});
+  toast('✅ 測試通知已發送','success');
+}
+
+function updateNotifUI(){
+  const perm=typeof Notification!=='undefined'?Notification.permission:'denied';
+  const el=document.getElementById('notif-status-set');
+  if(!el)return;
+  const status={
+    granted:`<div style="background:var(--green-bg);border-radius:10px;padding:10px 13px;font-size:13px;color:var(--green);display:flex;gap:8px;align-items:center"><span>✅</span>通知已開啟，系統將自動提醒您</div>`,
+    denied:`<div style="background:var(--red-bg);border-radius:10px;padding:10px 13px;font-size:13px;color:var(--red)">❌ 通知已封鎖。<br>請至 設定 → Safari → 通知 → 手動允許</div>`,
+    default:`<div style="background:var(--surface2);border-radius:10px;padding:10px 13px;font-size:13px;color:var(--text2)">尚未開啟通知，點下方按鈕授權</div>`
+  };
+  el.innerHTML=status[perm]||status.default;
+}
+
+function dailyCheck(){
+  const today=new Date().toDateString();
+  if(localStorage.getItem('crm-last-chk')===today)return;
+  const now=new Date();
+  const [hh]=(db.settings.checkTime||'09:00').split(':').map(Number);
+  if(now.getHours()<hh)return;
+  localStorage.setItem('crm-last-chk',today);
+  const exp=expiring().filter(p=>p.dl>=0&&RDAYS.includes(p.dl));
+  if(exp.length){ toast(`🔔 今日有 ${exp.length} 張保單到達提醒節點`,'info'); if(Notification.permission==='granted') setTimeout(pushNotif,2000); }
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════
+function saveSettings(){ db.settings.checkTime=document.getElementById('chk-time').value; save();toast('設定已儲存 ✓','success'); }
+
+function updateStorageInfo(){
+  const size=new Blob([JSON.stringify(db)]).size;
+  const el=document.getElementById('storage-info');
+  if(el) el.textContent=`儲存大小：${(size/1024).toFixed(1)} KB｜客戶：${db.clients.length}人｜保單：${db.policies.length}張`;
+}
+
+function exportJSON(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));
+  a.download=`insurance-crm-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  toast('備份匯出成功','success');
+}
+function importJSON(e){
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{ const d=JSON.parse(ev.target.result);
+      if(d.clients&&d.policies){ db=d;save();renderDash();toast('資料還原成功','success'); }
+      else toast('格式不符','error');
+    }catch{toast('匯入失敗','error')}
+  };
+  r.readAsText(f); e.target.value='';
+}
+function clearAll(){
+  if(!confirm('⚠ 確定清除所有資料？'))return;
+  db={clients:[],policies:[],history:[],settings:db.settings};
+  save();renderDash();toast('已清除','error');
+}
+
+// ═══════════════════════════════════════════
+// BADGES
+// ═══════════════════════════════════════════
+function updateBadges(){
+  const exp=expiring().filter(p=>p.dl>=0);
+  const urg=exp.filter(p=>p.dl<=2).length;
+  const all=exp.filter(p=>p.dl<=30).length;
+  const db_el=document.getElementById('dash-badge');
+  const rb_el=document.getElementById('rem-badge');
+  if(db_el){ db_el.textContent=urg; db_el.style.display=urg>0?'flex':'none'; }
+  if(rb_el){ rb_el.textContent=all; rb_el.style.display=all>0?'flex':'none'; }
+}
+
+// ═══════════════════════════════════════════
+// INSTALL BANNER (iOS Add to Home Screen)
+// ═══════════════════════════════════════════
+function checkInstall(){
+  const iOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone=window.navigator.standalone;
+  const dismissed=localStorage.getItem('install-dismissed');
+  const iw=document.getElementById('install-wrap');
+  if(!iw)return;
+  if(iOS&&!standalone&&!dismissed){
+    iw.innerHTML=`<div class="install-banner" style="margin-bottom:0">
+      <div class="bi">📲</div>
+      <div style="flex:1">
+        <h4>加入主畫面，像App一樣使用</h4>
+        <p>點 Safari 底部 ⎙ → 加入主畫面 → 加入</p>
+      </div>
+      <button class="close-btn" onclick="dismissInstall()">✕</button>
+    </div><div style="height:14px"></div>`;
+  }
+}
+function dismissInstall(){ localStorage.setItem('install-dismissed','1'); document.getElementById('install-wrap').innerHTML=''; }
+
+// ═══════════════════════════════════════════
+// SHEET HELPERS
+// ═══════════════════════════════════════════
+function os(id){ document.getElementById(id).classList.add('open'); }
+function cs(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.sheet-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+// Swipe down to close sheets
+document.querySelectorAll('.sheet').forEach(sheet=>{
+  let startY=0;
+  sheet.addEventListener('touchstart',e=>{ startY=e.touches[0].clientY; },{passive:true});
+  sheet.addEventListener('touchend',e=>{
+    const diff=e.changedTouches[0].clientY-startY;
+    if(diff>60&&sheet.scrollTop===0) sheet.closest('.sheet-overlay')?.classList.remove('open');
+  },{passive:true});
+});
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function toast(msg,type=''){
+  const el=document.createElement('div');
+  el.className='toast '+(type||'');
+  el.innerHTML=`<span>${type==='success'?'✓':type==='error'?'✕':type==='warning'?'⚠':'ℹ'}</span><span style="flex:1">${msg}</span>`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>{ el.style.animation='toastOut .2s ease forwards'; setTimeout(()=>el.remove(),200); },3500);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+load();
+renderDash();
+updateBadges();
+updateNotifUI();
+setTimeout(dailyCheck,2000);
+setInterval(dailyCheck,3600000);
+
+// Register Service Worker for offline support
+if('serviceWorker' in navigator){
+  const sw=`
+self.addEventListener('install',e=>self.skipWaiting());
+self.addEventListener('activate',e=>clients.claim());
+self.addEventListener('fetch',e=>{
+  if(e.request.mode==='navigate'){
+    e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+  }
+});`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  const url=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url).catch(()=>{});
+}
+</script>
+</body>
+</html>
